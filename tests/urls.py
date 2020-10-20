@@ -5,5 +5,5 @@ from django.conf.urls import url, include
 
 
 urlpatterns = [
-    url(r'^', include('django_docker_test_dbs.urls', namespace='django_docker_test_dbs')),
+    url(r'^', include('dj_pony.django_docker_test_dbs.urls', namespace='django_docker_test_dbs')),
 ]

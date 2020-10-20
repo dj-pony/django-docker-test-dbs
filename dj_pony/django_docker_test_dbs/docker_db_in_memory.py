@@ -26,9 +26,11 @@ class DockerDatabase(object):
     DOCKER_CONTAINER_VERSION: Optional[str] = 'latest'
     DOCKER_CONTAINER_PORT: Optional[int] = None
     DOCKER_CONTAINER_HOST: Optional[str] = None
+    DOCKER_CONTAINER_COMMAND: Optional[str] = None
     # Database Details
     DATABASE: Optional[str] = None
     DATABASE_PORT: Optional[str] = None
+    DATABASE_HOST: Optional[str] = None
     DATABASE_PASSWORD_ENV_VAR: Optional[str] = None
     DATABASE_USER: Optional[str] = None
     DATABASE_PASSWORD: str = 'database'  # TODO: Randomize password
@@ -58,7 +60,7 @@ class DockerDatabase(object):
             'NAME': self.DATABASE,
             'USER': self.DATABASE_USER,
             'PASSWORD': self.DATABASE_PASSWORD,
-            'HOST': self.DOCKER_CONTAINER_HOST,
+            'HOST': self.DOCKER_CONTAINER_HOST if self.DATABASE_HOST is None else self.DATABASE_HOST,
             'PORT': self.DOCKER_CONTAINER_PORT,
         }
 
@@ -84,8 +86,11 @@ class DockerDatabase(object):
 
     def start_docker(self) -> dict:
         """Start the database using docker."""
+        run_args = [self.docker_image_name]
+        if self.DOCKER_CONTAINER_COMMAND is not None:
+            run_args.append(self.DOCKER_CONTAINER_COMMAND)
         self.container = self.client.containers.run(
-            self.docker_image_name,
+            *run_args,
             detach=True,
             remove=True,
             environment=[f'{self.DATABASE_PASSWORD_ENV_VAR}={self.DATABASE_PASSWORD}', ],
@@ -113,8 +118,11 @@ class MySQL(DockerDatabase):
     """Run a MySQL database using Docker."""
     ENGINE_MATCH = 'mysql'
     DOCKER_CONTAINER_IMAGE = 'mysql'
+    DOCKER_CONTAINER_VERSION = "5.7"
+    DOCKER_CONTAINER_COMMAND = '--default-authentication-plugin=mysql_native_password'
     DATABASE = 'mysql'  # TODO: is this correct?
     DATABASE_PORT = 3306
+    DATABASE_HOST = '127.0.0.1'
     DATABASE_USER = 'root'
     DATABASE_PASSWORD_ENV_VAR = 'MYSQL_ROOT_PASSWORD'
     DATABASE_DATA_DIR = '/var/lib/mysql'
@@ -137,5 +145,4 @@ def run_testing_database(django_db_config, version=None):
         mysql.start_docker()
         new_db_config['default'] = mysql.django_database_config_dictionary
     return new_db_config
-
 

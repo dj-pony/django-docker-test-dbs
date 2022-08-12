@@ -10,6 +10,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.6"
 docker = "^4.0"
+tox-pyenv = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 django = "^2.2"
